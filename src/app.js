@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
+import { errorHandler } from './middlewares/error.middleware.js';
 
 const app = express();
 
@@ -24,6 +25,7 @@ import userRoutes from './routes/user.routes.js';
 app.use("/api/v1/users", userRoutes);    //http://localhost:8000/api/v1/users/<anyroute in user.routes.js>
 
 
+app.use(errorHandler);
 
 
 export { app };
