@@ -3,6 +3,7 @@ import {ApiError} from "../utils/ApiError.js";
 import { User } from "../models/user.model.js";
 import {uploadOnCloudinary} from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
+import jwt from "jsonwebtoken";
 
 const generateAccessAndRefreshToken = async (userId) => {
     try{
@@ -185,10 +186,53 @@ const logoutUser = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, null, "User logged out successfully"))
     
     const userId = req.user._id;
+})
 
+const refreshAccessToken = asyncHandler(async (req, res) => {
+    const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken;
+    if (!incomingRefreshToken) {
+        throw new ApiError(401, "Refresh token is missing");
+    }
+
+    try {
+        const decodedToken = jwt.verify(incomingRefreshToken, process.env.REFRESH_TOKEN_SECRET);
+        if (!decodedToken) {
+            throw new ApiError(403, "Invalid refresh token");
+        }
+    
+        const user = await User.findById(decodedToken._id).select("-password -refreshToken");
+        if (!user) {
+            throw new ApiError(404, "User not found");
+        }
+    
+        if(user.refreshToken !== incomingRefreshToken){
+            throw new ApiError(403, "Refresh token does not match");
+        }
+        const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user._id);
+        const options = {
+            httpOnly: true,
+            secure: true
+        }
+        return res
+            .status(200)
+            .cookie("accessToken", accessToken, options)
+            .cookie("refreshToken", refreshToken, options)
+            .json(new ApiResponse(200, 
+                { user, accessToken, refreshToken }, 
+                "Tokens refreshed successfully"
+            ));
+    } catch (err) {
+        throw new ApiError(401, "Invalid refresh token");
+    }
 })
 
 export { registerUser,
     LoginUser,
-    logoutUser
+    logoutUser,
+    refreshAccessToken
  };
+
+
+//the main purpose of access and refresh token is used to verify user and prevent user to again login and logout every time they perform any action on the website or app
+//refresh token is long termed like 7 days or more maybe and access token is shorttermed like 1d and refresh token is stored in db
+//access token is sent to frontend in httponly cookie and used to verify user on every request made to secured routes
