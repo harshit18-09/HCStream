@@ -82,3 +82,6 @@ userSchema.methods.generateRefreshToken = function() {
 }
 
 export const User = mongoose.model('User', userSchema);
+
+
+//accesstoken is shorttermed like 1d and refreshtoken is long termed like 7 days or more maybe 
