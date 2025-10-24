@@ -186,7 +186,7 @@ const logoutUser = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, null, "User logged out successfully"))
     
     const userId = req.user._id;
-})
+});
 
 const refreshAccessToken = asyncHandler(async (req, res) => {
     const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken;
@@ -224,15 +224,96 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     } catch (err) {
         throw new ApiError(401, "Invalid refresh token");
     }
-})
+});
+
+const changeCurrentPassword = asyncHandler(async (req, res) => {
+    const {oldpassword, newpassword} = req.body;
+    if(!oldpassword || !newpassword){
+        throw new ApiError(400, "Old password and new password are required");
+    }
+
+    const user = await User.findById(req.user._id);
+    const isPasswordValid = await user.isPasswordCorrect(oldpassword);
+    if(!isPasswordValid){
+        throw new ApiError(401, "Old password is incorrect");
+    }
+
+    user.password = newpassword;
+    await user.save({validateBeforeSave: false});
+    return res.status(200).json(new ApiResponse(200, null, "Password changed successfully"));
+});
+
+const getCurrentUser = asyncHandler(async (req, res) => {
+    return res.status(200).json(new ApiResponse(200, req.user, "Current user fetched successfully"));
+});
+
+const updateAccountDetails = asyncHandler(async (req, res) => {
+    const {fullname, email, username} = req.body;
+    if(!fullname && !email && !username){
+        throw new ApiError(400, "At least one field (fullname, email, username) is required to update");
+    }
+    User.findByIdAndUpdate(req.user._id, {
+        $set: {
+            fullname,
+            email: email
+        },
+    },{ new: true}).select("-password -refreshToken");
+
+    res.status(200).json(new ApiResponse(200, null, "Account details updated successfully"));
+});
+
+const updateUserAvatar = asyncHandler(async (req, res) => {
+    const avatarLocalPath = req.file?.path;
+    if(!avatarLocalPath){
+        throw new ApiError(400, "Avatar image is required");
+    }
+
+    const avatar = await uploadOnCloudinary(avatarLocalPath);
+    if(!avatar.url){
+        throw new ApiError(400, "Failed to upload avatar");
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(req.user._id, {
+        $set: {
+            avatar: avatar.url
+        }
+    }, {new: true}).select("-password -refreshToken");
+    return res.status(200).json(new ApiResponse(200, updatedUser, "User avatar updated successfully"));
+});
+
+const updateUserCoverImage = asyncHandler(async (req, res) => {
+    const coverImageLocalPath = req.file?.path;
+    if(!coverImageLocalPath){
+        throw new ApiError(400, "Cover image is required");
+    }
+
+    const coverImage = await uploadOnCloudinary(coverImageLocalPath);
+    if(!coverImage.url){
+        throw new ApiError(400, "Failed to upload cover image");
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(req.user._id, {
+        $set: {
+            coverImage: coverImage.url
+        }
+    }, {new: true}).select("-password -refreshToken");
+    return res.status(200).json(new ApiResponse(200, updatedUser, "User cover image updated successfully"));
+});
 
 export { registerUser,
     LoginUser,
     logoutUser,
-    refreshAccessToken
+    getCurrentUser,
+    changeCurrentPassword,
+    updateAccountDetails,
+    refreshAccessToken,
+    updateUserAvatar,
+    updateUserCoverImage
  };
 
 
+ 
+//NOTES
 //the main purpose of access and refresh token is used to verify user and prevent user to again login and logout every time they perform any action on the website or app
 //refresh token is long termed like 7 days or more maybe and access token is shorttermed like 1d and refresh token is stored in db
 //access token is sent to frontend in httponly cookie and used to verify user on every request made to secured routes
