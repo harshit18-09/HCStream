@@ -8,6 +8,9 @@ import {asyncHandler} from "../utils/asyncHandler.js"
 
 const getChannelStats = asyncHandler(async (req, res) => {
     const channelId = req.params.id;
+    if (!isValidObjectId(channelId)) {
+        throw new ApiError(400, "Invalid channel ID");
+    }
     const totalVideos = await Video.countDocuments({channel: channelId});
     const totalSubscribers = await Subscription.countDocuments({channel: channelId});
     const totalLikes = await Like.countDocuments({video: { $in: await Video.find({channel: channelId}).select('_id') }});
@@ -21,6 +24,9 @@ const getChannelStats = asyncHandler(async (req, res) => {
 
 const getChannelVideos = asyncHandler(async (req, res) => {
     const channelId = req.params.id;
+    if (!isValidObjectId(channelId)) {
+        throw new ApiError(400, "Invalid channel ID");
+    }
     const {page = 1, limit = 10} = req.query;
     const videos = await Video.find({channel: channelId})
         .skip((page - 1) * limit)
