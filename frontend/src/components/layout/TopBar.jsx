@@ -3,11 +3,13 @@ import {
   AppBar,
   Avatar,
   Box,
+  Button,
   IconButton,
   InputAdornment,
   Menu,
   MenuItem,
   TextField,
+  ToggleButton,
   Toolbar,
   Tooltip,
   Typography,
@@ -17,17 +19,21 @@ import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import AccountCircleRoundedIcon from "@mui/icons-material/AccountCircleRounded";
+import DarkModeRoundedIcon from "@mui/icons-material/DarkModeRounded";
+import LightModeRoundedIcon from "@mui/icons-material/LightModeRounded";
 import { useNavigate } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import { authApi } from "../../api/auth";
 import { useAuth } from "../../hooks/useAuth";
 import { buildErrorMessage } from "../../api/response";
+import { useThemeMode } from "../../providers/ThemeModeProvider";
 
 const TopBar = ({ onMenuToggle, onSearchChange, drawerWidth = 0 }) => {
   const navigate = useNavigate();
   const { user, clearAuth } = useAuth();
   const [anchorEl, setAnchorEl] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const { mode, toggleMode } = useThemeMode();
 
   const logoutMutation = useMutation({
     mutationFn: authApi.logout,
@@ -87,14 +93,25 @@ const TopBar = ({ onMenuToggle, onSearchChange, drawerWidth = 0 }) => {
       })}
     >
       <Toolbar sx={{ gap: 2 }}>
-        <IconButton
-          edge="start"
-          color="inherit"
-          onClick={onMenuToggle}
-          sx={{ display: { md: "none" } }}
-        >
-          <MenuRoundedIcon />
-        </IconButton>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+          <IconButton
+            edge="start"
+            color="inherit"
+            onClick={onMenuToggle}
+            sx={{ display: { md: "none" } }}
+          >
+            <MenuRoundedIcon />
+          </IconButton>
+          <Tooltip title={user?.fullname ?? "Account"}>
+            <IconButton onClick={handleMenuOpen} sx={{ p: 0 }}>
+              {user?.avatar ? (
+                <Avatar alt={user.fullname} src={user.avatar} />
+              ) : (
+                <Avatar>{user?.fullname?.[0]?.toUpperCase() ?? "U"}</Avatar>
+              )}
+            </IconButton>
+          </Tooltip>
+        </Box>
         <Box sx={{ flex: 1, maxWidth: 560, width: "100%" }}>
           <TextField
             value={searchTerm}
@@ -111,15 +128,50 @@ const TopBar = ({ onMenuToggle, onSearchChange, drawerWidth = 0 }) => {
             }}
           />
         </Box>
-        <Tooltip title={user?.fullname ?? "Account"}>
-          <IconButton onClick={handleMenuOpen} sx={{ p: 0 }}>
-            {user?.avatar ? (
-              <Avatar alt={user.fullname} src={user.avatar} />
+        <Tooltip title={`Switch to ${mode === "dark" ? "light" : "dark"} mode`} placement="bottom">
+          <ToggleButton
+            value="theme-toggle"
+            selected={mode === "dark"}
+            onChange={toggleMode}
+            size="small"
+            sx={{
+              borderRadius: 999,
+              minWidth: 0,
+              px: 1.25,
+              borderColor: "divider",
+              color: "text.secondary",
+              bgcolor: "background.paper",
+              "&.Mui-selected": {
+                bgcolor: "primary.main",
+                borderColor: "primary.main",
+                color: "primary.contrastText",
+              },
+              "&:hover": {
+                bgcolor: "action.hover",
+              },
+              "&.Mui-selected:hover": {
+                bgcolor: "primary.dark",
+              },
+            }}
+          >
+            {mode === "dark" ? (
+              <LightModeRoundedIcon fontSize="small" />
             ) : (
-              <Avatar>{user?.fullname?.[0]?.toUpperCase() ?? "U"}</Avatar>
+              <DarkModeRoundedIcon fontSize="small" />
             )}
-          </IconButton>
+          </ToggleButton>
         </Tooltip>
+        <Button
+          onClick={handleLogout}
+          size="small"
+          variant="outlined"
+          color="inherit"
+          startIcon={<LogoutRoundedIcon fontSize="small" />}
+          sx={{ display: { xs: "none", md: "inline-flex" } }}
+          disabled={logoutMutation.isPending}
+        >
+          Sign out
+        </Button>
         <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
           <Box sx={{ px: 2, py: 1.5 }}>
             <Typography variant="subtitle2">{user?.fullname}</Typography>

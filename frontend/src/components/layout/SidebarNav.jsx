@@ -1,7 +1,8 @@
 import { useMemo } from "react";
-import { useLocation, Link as RouterLink } from "react-router-dom";
+import { useLocation, useNavigate, Link as RouterLink } from "react-router-dom";
 import {
   Box,
+  Button,
   Divider,
   List,
   ListItemButton,
@@ -9,15 +10,39 @@ import {
   ListItemText,
   Typography,
 } from "@mui/material";
+import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
+import { useMutation } from "@tanstack/react-query";
 import { APP_NAME } from "../../config";
 import { navConfig } from "./navConfig";
+import { authApi } from "../../api/auth";
+import { useAuth } from "../../hooks/useAuth";
+import { buildErrorMessage } from "../../api/response";
 
 const SidebarNav = ({ onNavigate }) => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { clearAuth } = useAuth();
+
+  const logoutMutation = useMutation({
+    mutationFn: authApi.logout,
+    onSuccess: () => {
+      clearAuth();
+      navigate("/auth/login", { replace: true });
+    },
+    onError: (error) => {
+      console.error("Logout failed", buildErrorMessage(error));
+      clearAuth();
+      navigate("/auth/login", { replace: true });
+    },
+  });
 
   const activeSegment = useMemo(() => {
     return location.pathname;
   }, [location.pathname]);
+
+  const handleSignOut = () => {
+    logoutMutation.mutate();
+  };
 
   return (
     <Box sx={{ width: 260, display: "flex", flexDirection: "column", height: "100%" }}>
@@ -58,7 +83,17 @@ const SidebarNav = ({ onNavigate }) => {
           );
         })}
       </List>
-      <Box sx={{ p: 3 }}>
+      <Box sx={{ p: 3, display: "flex", flexDirection: "column", gap: 1.5 }}>
+        <Button
+          variant="contained"
+          color="primary"
+          size="small"
+          onClick={handleSignOut}
+          startIcon={<LogoutRoundedIcon fontSize="small" />}
+          disabled={logoutMutation.isPending}
+        >
+          Sign out
+        </Button>
         <Typography variant="caption" color="text.secondary">
           © {new Date().getFullYear()} {APP_NAME}
         </Typography>
