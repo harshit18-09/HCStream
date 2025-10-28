@@ -23,7 +23,7 @@ import { authApi } from "../../api/auth";
 import { useAuth } from "../../hooks/useAuth";
 import { buildErrorMessage } from "../../api/response";
 
-const TopBar = ({ onMenuToggle, onSearchChange }) => {
+const TopBar = ({ onMenuToggle, onSearchChange, drawerWidth = 0 }) => {
   const navigate = useNavigate();
   const { user, clearAuth } = useAuth();
   const [anchorEl, setAnchorEl] = useState(null);
@@ -78,10 +78,13 @@ const TopBar = ({ onMenuToggle, onSearchChange }) => {
       position="fixed"
       color="transparent"
       elevation={0}
-      sx={{
+      sx={(theme) => ({
         backdropFilter: "blur(12px)",
         borderBottom: "1px solid rgba(255,255,255,0.08)",
-      }}
+        width: { md: `calc(100% - ${drawerWidth}px)` },
+        ml: { md: `${drawerWidth}px` },
+        zIndex: theme.zIndex.drawer + 1,
+      })}
     >
       <Toolbar sx={{ gap: 2 }}>
         <IconButton

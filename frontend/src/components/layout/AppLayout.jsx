@@ -20,7 +20,11 @@ const AppLayout = () => {
 
   return (
     <Box sx={{ display: "flex", minHeight: "100vh", bgcolor: "background.default" }}>
-      <TopBar onMenuToggle={handleDrawerToggle} onSearchChange={handleSearchChange} />
+      <TopBar
+        onMenuToggle={handleDrawerToggle}
+        onSearchChange={handleSearchChange}
+        drawerWidth={drawerWidth}
+      />
       <Drawer
         variant="temporary"
         open={mobileOpen}
@@ -57,12 +61,12 @@ const AppLayout = () => {
         sx={{
           flexGrow: 1,
           width: { md: `calc(100% - ${drawerWidth}px)` },
+          ml: { md: `${drawerWidth}px` },
           px: { xs: 2, md: 4 },
           py: 3,
-          mt: 8,
         }}
       >
-        <Toolbar sx={{ display: { md: "none" } }} />
+        <Toolbar />
         <Outlet context={{ searchTerm }} />
       </Box>
     </Box>

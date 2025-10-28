@@ -11,41 +11,41 @@ export const navConfig = [
   {
     label: "Home",
     to: "/",
-    icon: <HomeRoundedIcon fontSize="small" />,
+    icon: HomeRoundedIcon,
   },
   {
     label: "Upload",
     to: "/videos/upload",
-    icon: <CloudUploadRoundedIcon fontSize="small" />,
+    icon: CloudUploadRoundedIcon,
   },
   {
     label: "Playlists",
     to: "/playlists",
-    icon: <VideoLibraryRoundedIcon fontSize="small" />,
+    icon: VideoLibraryRoundedIcon,
   },
   {
     label: "Watch History",
     to: "/watch-history",
-    icon: <HistoryRoundedIcon fontSize="small" />,
+    icon: HistoryRoundedIcon,
   },
   {
     label: "Liked Videos",
     to: "/likes",
-    icon: <ThumbUpAltRoundedIcon fontSize="small" />,
+    icon: ThumbUpAltRoundedIcon,
   },
   {
     label: "Dashboard",
     to: "/dashboard",
-    icon: <BarChartRoundedIcon fontSize="small" />,
+    icon: BarChartRoundedIcon,
   },
   {
     label: "Tweets",
     to: "/tweets",
-    icon: <ChatBubbleOutlineRoundedIcon fontSize="small" />,
+    icon: ChatBubbleOutlineRoundedIcon,
   },
   {
     label: "Profile",
     to: "/profile",
-    icon: <PersonRoundedIcon fontSize="small" />,
+    icon: PersonRoundedIcon,
   },
 ];

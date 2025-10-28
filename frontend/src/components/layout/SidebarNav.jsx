@@ -33,6 +33,7 @@ const SidebarNav = ({ onNavigate }) => {
       <List sx={{ flex: 1 }}>
         {navConfig.map((item) => {
           const isActive = activeSegment === item.to || (item.to !== "/" && activeSegment.startsWith(item.to));
+          const IconComponent = item.icon;
           return (
             <ListItemButton
               key={item.to}
@@ -46,7 +47,9 @@ const SidebarNav = ({ onNavigate }) => {
                 mb: 0.5,
               }}
             >
-              <ListItemIcon sx={{ minWidth: 36, color: "inherit" }}>{item.icon}</ListItemIcon>
+              <ListItemIcon sx={{ minWidth: 36, color: "inherit" }}>
+                {IconComponent ? <IconComponent fontSize="small" /> : null}
+              </ListItemIcon>
               <ListItemText
                 primary={item.label}
                 primaryTypographyProps={{ fontSize: 14, fontWeight: isActive ? 600 : 500 }}

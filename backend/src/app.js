@@ -5,8 +5,18 @@ import { errorHandler } from './middlewares/error.middleware.js';
 
 const app = express();
 
+const allowedOrigins = (process.env.CORS_ORIGIN || "")
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
 app.use(cors({
-    origin: process.env.CORS_ORIGIN,
+    origin: (origin, callback) => {
+        if (!origin || !allowedOrigins.length || allowedOrigins.includes(origin)) {
+            return callback(null, true);
+        }
+        return callback(new Error("Not allowed by CORS"));
+    },
     credentials: true
 }))
 app.use(express.json({
