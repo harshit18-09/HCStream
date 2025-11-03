@@ -33,7 +33,10 @@ jobs:
           FULL_IMAGE_NAME="$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
 
           # Build using the Dockerfile in the backend directory and set the context to backend/
-          docker build -f backend/Dockerfile -t "$FULL_IMAGE_NAME" backend
+          docker build \
+          --build-arg CORS_ORIGIN=${{ secrets.CORS_ORIGIN }} \
+          -f backend/Dockerfile \
+          -t "$FULL_IMAGE_NAME" backend
 
           # Push the image to ECR
           docker push "$FULL_IMAGE_NAME"
