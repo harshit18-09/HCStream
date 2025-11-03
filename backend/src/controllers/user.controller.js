@@ -21,12 +21,26 @@ const generateAccessAndRefreshToken = async (userId) => {
     }
 } 
 // Helper to return consistent cookie options for set/clear across environments
-const getCookieOptions = (overrides = {}) => {
+// Accepts the incoming request so we can infer whether the connection is secure
+// (this helps when running behind proxies / ALB where TLS may be terminated upstream)
+const getCookieOptions = (req, overrides = {}) => {
     const isProduction = process.env.NODE_ENV === "production";
+
+    // Allow explicit override from env for quick testing (set COOKIE_SECURE=false to disable secure flag)
+    const envSecureOverride = typeof process.env.COOKIE_SECURE === "string"
+        ? process.env.COOKIE_SECURE.toLowerCase() === "true"
+        : undefined;
+
+    // Determine if this request was received over a secure channel.
+    // When behind proxies (ALB) express will set req.secure if `app.set('trust proxy', 1)` is enabled.
+    const requestIsSecure = Boolean(req && (req.secure || req.headers?.["x-forwarded-proto"] === "https"));
+
+    const secureFlag = envSecureOverride !== undefined ? envSecureOverride : (isProduction ? requestIsSecure : false);
+
     const base = {
         httpOnly: true,
-        secure: isProduction,
-        sameSite: isProduction ? "none" : "lax",
+        secure: secureFlag,
+        sameSite: secureFlag ? "none" : "lax",
         maxAge: 7 * 24 * 60 * 60 * 1000,
         path: "/",
     };
@@ -150,7 +164,12 @@ const LoginUser = asyncHandler(async (req, res) => {
     const {accessToken, refreshToken} = await generateAccessAndRefreshToken(user._id);
 
     const loggedInUser = await User.findById(user._id).select("-password -refreshToken");
-    const cookieOptions = getCookieOptions();
+    const cookieOptions = getCookieOptions(req);
+
+    // Debug logging to help verify Set-Cookie in production (can be removed later)
+    if (process.env.DEBUG_COOKIES === 'true') {
+        console.log('[DEBUG] Setting auth cookies. secure:', cookieOptions.secure, 'sameSite:', cookieOptions.sameSite);
+    }
 
     return res.status(200)
     .cookie("accessToken", accessToken, cookieOptions)
@@ -185,7 +204,7 @@ const logoutUser = asyncHandler(async (req, res) => {
             new: true,
         }
     )
-    const options = getCookieOptions({ maxAge: 0 });
+    const options = getCookieOptions(req, { maxAge: 0 });
 
     return res
     .status(200)
@@ -217,7 +236,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
             throw new ApiError(403, "Refresh token does not match");
         }
         const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user._id);
-        const options = getCookieOptions();
+        const options = getCookieOptions(req);
         return res
             .status(200)
             .cookie("accessToken", accessToken, options)
