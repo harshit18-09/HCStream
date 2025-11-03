@@ -5,6 +5,12 @@ import { errorHandler } from './middlewares/error.middleware.js';
 
 const app = express();
 
+// When running behind a load balancer / proxy (ALB) express needs to
+// trust the proxy in order to correctly detect secure connections
+// and to allow secure cookies to be set when behind HTTPS-terminating proxies.
+// This is important when your app is deployed behind AWS ALB/ECS.
+app.set('trust proxy', 1);
+
 app.get("/", (req, res) => {
     res.status(200).send("OK");
 });
@@ -23,13 +29,38 @@ app.use(cors({
     },
     credentials: true
 }))
+// capture raw body for debugging (adds `req.rawBody`). Keep limits sane.
+// The `verify` function won't interfere with parsing; it only captures the buffer.
 app.use(express.json({
-    limit: '16kb'
+    limit: '16kb',
+    verify: (req, res, buf, encoding) => {
+        try {
+            req.rawBody = buf.toString(encoding || 'utf8');
+        } catch (e) {
+            // ignore if no body present
+        }
+    }
 }));
+
 app.use(express.urlencoded({
     extended: true,
     limit: '16kb'
 }));
+
+// Lightweight debug logger for login route to help diagnose missing req.body
+// Remove or guard this in production after debugging.
+app.use((req, res, next) => {
+    if (req.method === 'POST' && req.path && req.path.startsWith('/api/v1/users/login')) {
+        console.log('[DEBUG] Login request headers:', {
+            origin: req.headers.origin,
+            host: req.headers.host,
+            'content-type': req.headers['content-type'],
+            'content-length': req.headers['content-length']
+        });
+        console.log('[DEBUG] req.rawBody:', req.rawBody);
+    }
+    next();
+});
 app.use(express.static('public'));
 app.use(cookieParser()); //there are options in this also if needed 
 
