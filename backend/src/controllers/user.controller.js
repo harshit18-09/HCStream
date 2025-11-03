@@ -20,6 +20,22 @@ const generateAccessAndRefreshToken = async (userId) => {
         throw new ApiError(500, "Token generation failed something went wrong");
     }
 } 
+// Helper to return consistent cookie options for set/clear across environments
+const getCookieOptions = (overrides = {}) => {
+    const isProduction = process.env.NODE_ENV === "production";
+    const base = {
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: isProduction ? "none" : "lax",
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+        path: "/",
+    };
+    // optional domain override if provided (e.g., ".example.com")
+    if (process.env.COOKIE_DOMAIN) {
+        base.domain = process.env.COOKIE_DOMAIN;
+    }
+    return Object.assign({}, base, overrides);
+};
 const registerUser = asyncHandler(async (req, res) => {
     // Registration logic here
     //get user details from frontend
@@ -134,13 +150,7 @@ const LoginUser = asyncHandler(async (req, res) => {
     const {accessToken, refreshToken} = await generateAccessAndRefreshToken(user._id);
 
     const loggedInUser = await User.findById(user._id).select("-password -refreshToken");
-    const isProduction = process.env.NODE_ENV === "production";
-    const cookieOptions = {
-        httpOnly: true,
-        secure: isProduction,
-        sameSite: isProduction ? "none" : "lax",
-        maxAge: 7 * 24 * 60 * 60 * 1000
-    };
+    const cookieOptions = getCookieOptions();
 
     return res.status(200)
     .cookie("accessToken", accessToken, cookieOptions)
@@ -175,10 +185,7 @@ const logoutUser = asyncHandler(async (req, res) => {
             new: true,
         }
     )
-    const options = {
-        httpOnly: true,
-        secure: true
-    }
+    const options = getCookieOptions({ maxAge: 0 });
 
     return res
     .status(200)
@@ -210,10 +217,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
             throw new ApiError(403, "Refresh token does not match");
         }
         const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user._id);
-        const options = {
-            httpOnly: true,
-            secure: true
-        }
+        const options = getCookieOptions();
         return res
             .status(200)
             .cookie("accessToken", accessToken, options)

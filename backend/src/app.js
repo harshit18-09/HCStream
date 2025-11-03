@@ -15,20 +15,33 @@ app.get("/", (req, res) => {
     res.status(200).send("OK");
 });
 
-const allowedOrigins = (process.env.CORS_ORIGIN || "")
+// Build allowed origins list. In development default to localhost vite dev server
+const defaultDevOrigin = "http://localhost:5173";
+const allowedOrigins = (process.env.CORS_ORIGIN || (process.env.NODE_ENV === "production" ? "" : defaultDevOrigin))
     .split(",")
     .map((origin) => origin.trim())
     .filter(Boolean);
 
 app.use(cors({
     origin: (origin, callback) => {
-        if (!origin || !allowedOrigins.length || allowedOrigins.includes(origin)) {
+        // allow non-browser requests (e.g., same-origin from server-side tools) that have no origin
+        if (!origin) return callback(null, true);
+
+        // If no explicit allowed origins were provided in production, reject unknown origins
+        if (!allowedOrigins.length) return callback(new Error("CORS origin not configured"));
+
+        // support wildcard '*' in env to allow any origin (not recommended in production when credentials=true)
+        if (allowedOrigins.includes("*") || allowedOrigins.includes(origin)) {
             return callback(null, true);
         }
+
         return callback(new Error("Not allowed by CORS"));
     },
-    credentials: true
-}))
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept"],
+    optionsSuccessStatus: 204
+}));
 // capture raw body for debugging (adds `req.rawBody`). Keep limits sane.
 // The `verify` function won't interfere with parsing; it only captures the buffer.
 app.use(express.json({
