@@ -5,6 +5,6 @@ import {
 
 const router = Router();
 
-router.get('/healthcheck', healthcheck);
+router.get('/', healthcheck);
 
 export default router;
