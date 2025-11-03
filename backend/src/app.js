@@ -5,6 +5,10 @@ import { errorHandler } from './middlewares/error.middleware.js';
 
 const app = express();
 
+app.get("/", (req, res) => {
+    res.status(200).send("OK");
+});
+
 const allowedOrigins = (process.env.CORS_ORIGIN || "")
     .split(",")
     .map((origin) => origin.trim())
