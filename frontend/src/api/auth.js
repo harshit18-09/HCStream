@@ -9,10 +9,24 @@ export const authApi = {
   },
   login: async (credentials) => {
     const response = await apiClient.post("/users/login", credentials);
-    return unwrapAxiosResponse(response);
+    const payload = unwrapAxiosResponse(response);
+    try {
+      // store access token in localStorage for axios Authorization header usage
+      if (payload && payload.accessToken) {
+        localStorage.setItem("accessToken", payload.accessToken);
+      }
+    } catch (e) {
+      // ignore localStorage failures
+    }
+    return payload;
   },
   logout: async () => {
     const response = await apiClient.post("/users/logout");
+    try {
+      localStorage.removeItem("accessToken");
+    } catch (e) {
+      // ignore
+    }
     return unwrapAxiosResponse(response);
   },
   getCurrentUser: async () => {

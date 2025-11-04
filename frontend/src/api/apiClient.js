@@ -13,18 +13,28 @@ const apiClient = axios.create({
 });
 
 apiClient.interceptors.request.use((config) => {
-  // Attach Authorization header from zustand store if available. This is a fallback
-  // to support environments where httponly cookies are not being persisted/sent
-  // (for example when frontend is served over HTTP from S3 website endpoints).
-  // Note: storing tokens in JS-visible storage reduces security compared to httponly cookies.
+  // Prefer token from localStorage (explicitly stored on login) for Authorization header
+  // fall back to zustand store if localStorage value not present. Keep cookie-based
+  // credential behaviour unchanged (withCredentials: true) for httponly cookie flows.
   try {
-    const token = useAuthStore.getState().accessToken;
+    let token = null;
+    try {
+      token = localStorage.getItem("accessToken");
+    } catch (e) {
+      // localStorage may be unavailable in some environments; fall back to store
+      token = null;
+    }
+
+    if (!token) {
+      token = useAuthStore.getState().accessToken;
+    }
+
     if (token) {
       config.headers = config.headers || {};
       config.headers.Authorization = `Bearer ${token}`;
     }
   } catch (e) {
-    // don't fail request creation if store access fails for any reason
+    // don't fail request creation if store/localStorage access fails for any reason
   }
 
   if (config.data instanceof FormData) {
