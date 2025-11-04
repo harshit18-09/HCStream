@@ -16,6 +16,7 @@ import PlaylistAddRoundedIcon from "@mui/icons-material/PlaylistAddRounded";
 import SubscriptionsRoundedIcon from "@mui/icons-material/SubscriptionsRounded";
 import VideocamRoundedIcon from "@mui/icons-material/VideocamRounded";
 import { videoApi } from "../../api/video";
+import { aiApi } from "../../api/ai";
 import { likeApi } from "../../api/like";
 import { subscriptionApi } from "../../api/subscription";
 import { commentApi } from "../../api/comment";
@@ -35,6 +36,9 @@ const VideoDetailPage = () => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const [commentError, setCommentError] = useState(null);
+  const [transcript, setTranscript] = useState(null);
+  const [isTranscribing, setIsTranscribing] = useState(false);
+  const [transcribeError, setTranscribeError] = useState(null);
 
   const videoQuery = useQuery({
     queryKey: ["video", videoId],
@@ -143,6 +147,28 @@ const VideoDetailPage = () => {
         <Grid item xs={12} md={8}>
           <Stack spacing={3}>
             <VideoPlayer src={video.videoFile} poster={video.thumbnail} />
+            {/* Transcript display (Tailwind classes included if the project has Tailwind) */}
+            <Box>
+              {transcribeError ? (
+                <Alert severity="error">{transcribeError}</Alert>
+              ) : null}
+              {transcript ? (
+                <Box className="prose max-w-none bg-white dark:bg-gray-800 rounded-lg p-4 mt-3 shadow-sm" sx={{ mt: 2 }}>
+                  <Typography variant="h6" fontWeight={700} gutterBottom>
+                    Transcript
+                  </Typography>
+                  <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                    {transcript}
+                  </Typography>
+                </Box>
+              ) : (
+                isTranscribing ? (
+                  <Box sx={{ mt: 2 }}>
+                    <Typography variant="body2">Generating transcript — this may take a while.</Typography>
+                  </Box>
+                ) : null
+              )}
+            </Box>
             <Stack spacing={2}>
               <Box>
                 <Typography variant="h4" fontWeight={700} gutterBottom>
@@ -171,6 +197,37 @@ const VideoDetailPage = () => {
                     disabled={toggleLikeMutation.isPending}
                   >
                     Applaud
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    onClick={async () => {
+                      // generate transcript
+                      setTranscribeError(null);
+                      setTranscript(null);
+                      try {
+                        setIsTranscribing(true);
+                        // fetch video blob (same origin) and send to backend
+                        const videoUrl = video.videoFile;
+                        const resp = await fetch(videoUrl);
+                        if (!resp.ok) throw new Error('Failed to download video');
+                        const blob = await resp.blob();
+                        const formData = new FormData();
+                        // give a filename fallback
+                        const filename = (video.title || video._id || 'video') + '.mp4';
+                        formData.append('video', new File([blob], filename, { type: blob.type }));
+                        const result = await aiApi.transcribeVideo(formData);
+                        const payload = result?.data ?? result;
+                        setTranscript(payload?.transcript ?? payload?.data?.transcript ?? payload);
+                      } catch (err) {
+                        console.error('Transcription error', err);
+                        setTranscribeError(err?.response?.data?.error ?? err.message ?? 'Transcription failed');
+                      } finally {
+                        setIsTranscribing(false);
+                      }
+                    }}
+                    disabled={isTranscribing}
+                  >
+                    {isTranscribing ? 'Generating...' : 'Generate Transcript'}
                   </Button>
                   {!isOwner ? (
                     <Button

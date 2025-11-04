@@ -73,6 +73,7 @@ import likeRouter from './routes/like.route.js';
 import playlistRouter from './routes/playlist.route.js';
 import commentRouter from './routes/comment.route.js';
 import dashboardRouter from './routes/dashboard.route.js';
+import aiRouter from './routes/aiRoutes.js';
 
 
 app.use("/api/v1/users", userRouter);    //http://localhost:8000/api/v1/users/<anyroute in user.routes.js> (for reference)
@@ -84,6 +85,9 @@ app.use("/api/v1/likes", likeRouter);
 app.use("/api/v1/playlists", playlistRouter);
 app.use("/api/v1/comments", commentRouter);
 app.use("/api/v1/dashboard", dashboardRouter);
+app.use("/api/v1/ai", aiRouter);
+// Also expose AI routes without the v1 prefix for compatibility with older clients
+app.use("/api/ai", aiRouter);
 
 app.use(errorHandler);
 

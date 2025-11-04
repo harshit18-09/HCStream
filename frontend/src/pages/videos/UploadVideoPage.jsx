@@ -12,6 +12,7 @@ import {
 import CloudUploadRoundedIcon from "@mui/icons-material/CloudUploadRounded";
 import { useMutation } from "@tanstack/react-query";
 import { videoApi } from "../../api/video";
+import { aiApi } from "../../api/ai";
 import { buildErrorMessage } from "../../api/response";
 
 const UploadVideoPage = () => {
@@ -24,6 +25,8 @@ const UploadVideoPage = () => {
   const [videoFile, setVideoFile] = useState(null);
   const [thumbnailFile, setThumbnailFile] = useState(null);
   const [error, setError] = useState(null);
+  const [isSuggesting, setIsSuggesting] = useState(false);
+  const [suggestError, setSuggestError] = useState(null);
 
   const publishMutation = useMutation({
     mutationFn: () => {
@@ -95,6 +98,46 @@ const UploadVideoPage = () => {
           multiline
           minRows={4}
         />
+        <Stack direction="row" spacing={2} alignItems="center">
+          <TextField
+            name="reference"
+            label="Reference text (optional)"
+            value={formState.reference ?? ''}
+            onChange={(e) => setFormState(prev => ({ ...prev, reference: e.target.value }))}
+            fullWidth
+            placeholder="Paste a brief description or keywords to auto-suggest title/description"
+          />
+          <Button
+            variant="outlined"
+            onClick={async () => {
+              setSuggestError(null);
+              setIsSuggesting(true);
+              try {
+                const formData = new FormData();
+                if (thumbnailFile) formData.append('thumbnail', thumbnailFile);
+                if (formState.reference) formData.append('reference', formState.reference);
+                const resp = await aiApi.suggest(formData);
+                const payload = resp?.data ?? resp;
+                if (payload?.titleSuggestion) {
+                  setFormState(prev => ({ ...prev, title: payload.titleSuggestion }));
+                }
+                if (payload?.descriptionSuggestion) {
+                  setFormState(prev => ({ ...prev, description: payload.descriptionSuggestion }));
+                }
+              } catch (err) {
+                console.error('Suggest error', err, err?.response?.data);
+                const serverData = err?.response?.data;
+                setSuggestError(serverData ? (typeof serverData === 'string' ? serverData : JSON.stringify(serverData)) : (err.message ?? 'Suggestion failed'));
+              } finally {
+                setIsSuggesting(false);
+              }
+            }}
+            disabled={isSuggesting}
+          >
+            {isSuggesting ? 'Suggesting...' : 'Auto-suggest'}
+          </Button>
+        </Stack>
+        {suggestError ? <Alert severity="error">{suggestError}</Alert> : null}
         <TextField
           name="duration"
           label="Duration (seconds)"
