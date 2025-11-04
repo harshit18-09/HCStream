@@ -25,6 +25,34 @@ export const verifyJWT = asyncHandler(async (req, _, next) => {
         }
 
         if (!token) {
+            // No token present. Before rejecting, allow a development-only bypass.
+            // This is intentionally guarded so it won't run in production.
+            const bypassRequested = (process.env.NODE_ENV || 'development') !== 'production' &&
+                (String(req.header?.('X-Bypass-Auth') || req.headers?.['x-bypass-auth'] || '').toLowerCase() === 'true');
+
+            if (bypassRequested) {
+                // Try to set req.user to a valid user. Prefer explicit user id header.
+                const bypassUserId = req.header?.('X-Bypass-User-Id') || req.headers?.['x-bypass-user-id'];
+                let user = null;
+                if (bypassUserId) {
+                    try {
+                        user = await User.findById(bypassUserId).select("-password -refreshToken");
+                    } catch (e) {
+                        user = null;
+                    }
+                }
+
+                if (!user) {
+                    // fallback: pick first user in DB (useful for local testing only)
+                    user = await User.findOne().select("-password -refreshToken");
+                }
+
+                if (user) {
+                    req.user = user;
+                    return next();
+                }
+            }
+
             throw new ApiError(401, "Access token is missing or invalid");
         }
 
@@ -37,6 +65,31 @@ export const verifyJWT = asyncHandler(async (req, _, next) => {
         req.user = user;
         next();
     } catch (err) {
+        // If verification fails, allow a development-only bypass when requested.
+        const bypassRequested = (process.env.NODE_ENV || 'development') !== 'production' &&
+            (String(req.header?.('X-Bypass-Auth') || req.headers?.['x-bypass-auth'] || '').toLowerCase() === 'true');
+
+        if (bypassRequested) {
+            const bypassUserId = req.header?.('X-Bypass-User-Id') || req.headers?.['x-bypass-user-id'];
+            let user = null;
+            if (bypassUserId) {
+                try {
+                    user = await User.findById(bypassUserId).select("-password -refreshToken");
+                } catch (e) {
+                    user = null;
+                }
+            }
+
+            if (!user) {
+                user = await User.findOne().select("-password -refreshToken");
+            }
+
+            if (user) {
+                req.user = user;
+                return next();
+            }
+        }
+
         throw new ApiError(401, "Unauthorized access - invalid token");
     }
 });
