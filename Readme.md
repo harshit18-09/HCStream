@@ -128,7 +128,7 @@ cd HCStream
 | 🌐 **AWS ALB (Load Balancer)** | ![AWS ALB](./docs/screenshots/aws-ec2-alb.png) |
 | ⚡ **GitHub Actions (CI/CD)** | ![GitHub Actions](./docs/screenshots/github-actions.png) |
 | 💸 **AWS SNS Billing Alert** | ![Billing Alert](./docs/screenshots/sns-billing-alert.png) |
-| 🧠 **AI Module** *(coming soon)* | _To be added after AI Caption/Transcript integration_ |
+| 🧠 **AI Module** *(coming soon)* | ![AI Module](./docs/screenshots/ai.png) |
 
 > 🗂️ All screenshots are stored in `/docs/screenshots/` folder.
 
