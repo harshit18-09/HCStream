@@ -32,10 +32,6 @@ export const useAuthStore = create(
     }),
     {
       name: "hcstream-auth",
-      // Persist tokens temporarily to allow Authorization fallback when httponly cookies
-      // are not available (e.g., testing with http S3 website). Be careful: this
-      // stores tokens in storage accessible to JS. Remove this in production if
-      // you rely on httponly cookies.
       partialize: (state) => ({ user: state.user, accessToken: state.accessToken, refreshToken: state.refreshToken }),
     }
   )

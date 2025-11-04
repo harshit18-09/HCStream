@@ -222,7 +222,7 @@ const deleteVideo = asyncHandler(async (req, res) => {
     });
 
     if (!video) {
-        throw new ApiError(404, "Video not found or you do not have permission to delete it");
+        throw new ApiError(404, "Video not found or no permission");
     }
 
     return res

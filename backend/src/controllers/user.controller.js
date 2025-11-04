@@ -20,19 +20,14 @@ const generateAccessAndRefreshToken = async (userId) => {
         throw new ApiError(500, "Token generation failed something went wrong");
     }
 } 
-// Helper to return consistent cookie options for set/clear across environments
-// Accepts the incoming request so we can infer whether the connection is secure
-// (this helps when running behind proxies / ALB where TLS may be terminated upstream)
+
 const getCookieOptions = (req, overrides = {}) => {
     const isProduction = process.env.NODE_ENV === "production";
 
-    // Allow explicit override from env for quick testing (set COOKIE_SECURE=false to disable secure flag)
     const envSecureOverride = typeof process.env.COOKIE_SECURE === "string"
         ? process.env.COOKIE_SECURE.toLowerCase() === "true"
         : undefined;
 
-    // Determine if this request was received over a secure channel.
-    // When behind proxies (ALB) express will set req.secure if `app.set('trust proxy', 1)` is enabled.
     const requestIsSecure = Boolean(req && (req.secure || req.headers?.["x-forwarded-proto"] === "https"));
 
     const secureFlag = envSecureOverride !== undefined ? envSecureOverride : (isProduction ? requestIsSecure : false);
@@ -44,24 +39,12 @@ const getCookieOptions = (req, overrides = {}) => {
         maxAge: 7 * 24 * 60 * 60 * 1000,
         path: "/",
     };
-    // optional domain override if provided (e.g., ".example.com")
     if (process.env.COOKIE_DOMAIN) {
         base.domain = process.env.COOKIE_DOMAIN;
     }
     return Object.assign({}, base, overrides);
 };
 const registerUser = asyncHandler(async (req, res) => {
-    // Registration logic here
-    //get user details from frontend
-    //validation - not empty
-    //check if user already exists: username or email
-    //check for images , check for avatar
-    //if yes upload to cloudinary , avatar
-    // create a userobject - create entry in db
-    //remove password and refresh token field from response
-    //check for user creation
-    //return response
-
     const { fullname, email, username, password } = req.body
     // if(fullname === ""){
     //     throw new ApiError(400, "Fullname is required");
@@ -80,7 +63,6 @@ const registerUser = asyncHandler(async (req, res) => {
     }
 
     const avatarLocalPath = req.files?.avatar?.[0]?.path;
-    // const coverImageLocalPath = req.files?.coverImage?.[0]?.path;
     let coverImageLocalPath;
     if(req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0){
         coverImageLocalPath = req.files?.coverImage[0]?.path;
@@ -118,16 +100,6 @@ const registerUser = asyncHandler(async (req, res) => {
 });
 
 const LoginUser = asyncHandler(async (req, res) => {
-    //req -> data from the database
-    //using username or email and password
-    //find the user from db
-    //if not found send error
-    //if found check for password match
-    //if not match send error
-    //if match generate access token and refresh token
-    //store refresh token in db for that user
-    //send response with access token and refresh token in httponly cookie
-
     const {email, username, password} = req.body;
     if(!username && !email){
         throw new ApiError(400, "Username or Email is required");
@@ -165,8 +137,6 @@ const LoginUser = asyncHandler(async (req, res) => {
 
     const loggedInUser = await User.findById(user._id).select("-password -refreshToken");
     const cookieOptions = getCookieOptions(req);
-
-    // Debug logging to help verify Set-Cookie in production (can be removed later)
     if (process.env.DEBUG_COOKIES === 'true') {
         console.log('[DEBUG] Setting auth cookies. secure:', cookieOptions.secure, 'sameSite:', cookieOptions.sameSite);
     }
@@ -182,18 +152,12 @@ const LoginUser = asyncHandler(async (req, res) => {
                 accessToken,
                 refreshToken
             },
-            "User logged in successfully"
+            "User logged in"
         )
     )
 });
 
 const logoutUser = asyncHandler(async (req, res) => {
-    //logout logic here
-    //get user from req
-    //clear the refresh token from db
-    //clear the cookies from frontend
-    //send response
-
     User.findByIdAndUpdate(req.user._id,
         {
             $set: {
@@ -210,8 +174,8 @@ const logoutUser = asyncHandler(async (req, res) => {
     .status(200)
     .clearCookie("accessToken", options)
     .clearCookie("refreshToken", options)
-    .json(new ApiResponse(200, null, "User logged out successfully"))
-    
+    .json(new ApiResponse(200, null, "User logged out"));
+
     const userId = req.user._id;
 });
 
@@ -253,7 +217,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 const changeCurrentPassword = asyncHandler(async (req, res) => {
     const {oldpassword, newpassword} = req.body;
     if(!oldpassword || !newpassword){
-        throw new ApiError(400, "Old password and new password are required");
+        throw new ApiError(400, "Passwords needed");
     }
 
     const user = await User.findById(req.user._id);
@@ -268,13 +232,13 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
 });
 
 const getCurrentUser = asyncHandler(async (req, res) => {
-    return res.status(200).json(new ApiResponse(200, req.user, "Current user fetched successfully"));
+    return res.status(200).json(new ApiResponse(200, req.user, "Current user fetched"));
 });
 
 const updateAccountDetails = asyncHandler(async (req, res) => {
     const {fullname, email, username} = req.body;
     if(!fullname && !email && !username){
-        throw new ApiError(400, "At least one field (fullname, email, username) is required to update");
+        throw new ApiError(400, "At least one field (fullname, email, username) is required");
     }
     User.findByIdAndUpdate(req.user._id, {
         $set: {
@@ -283,7 +247,7 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
         },
     },{ new: true}).select("-password -refreshToken");
 
-    res.status(200).json(new ApiResponse(200, null, "Account details updated successfully"));
+    res.status(200).json(new ApiResponse(200, null, "Account details updated"));
 });
 
 const updateUserAvatar = asyncHandler(async (req, res) => {
@@ -459,7 +423,7 @@ export { registerUser,
 
 
 
-//NOTES
+//NOTES 
 //the main purpose of access and refresh token is used to verify user and prevent user to again login and logout every time they perform any action on the website or app
 //refresh token is long termed like 7 days or more maybe and access token is shorttermed like 1d and refresh token is stored in db
 //access token is sent to frontend in httponly cookie and used to verify user on every request made to secured routes

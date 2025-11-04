@@ -11,12 +11,10 @@ export const authApi = {
     const response = await apiClient.post("/users/login", credentials);
     const payload = unwrapAxiosResponse(response);
     try {
-      // store access token in localStorage for axios Authorization header usage
       if (payload && payload.accessToken) {
         localStorage.setItem("accessToken", payload.accessToken);
       }
     } catch (e) {
-      // ignore localStorage failures
     }
     return payload;
   },
@@ -25,7 +23,6 @@ export const authApi = {
     try {
       localStorage.removeItem("accessToken");
     } catch (e) {
-      // ignore
     }
     return unwrapAxiosResponse(response);
   },

@@ -4,7 +4,7 @@ import { useAuthStore } from "../store/authStore";
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
-  withCredentials: true,
+  withCredentials: false,
   timeout: 20000,
   headers: {
     "Content-Type": "application/json",
@@ -13,15 +13,11 @@ const apiClient = axios.create({
 });
 
 apiClient.interceptors.request.use((config) => {
-  // Prefer token from localStorage (explicitly stored on login) for Authorization header
-  // fall back to zustand store if localStorage value not present. Keep cookie-based
-  // credential behaviour unchanged (withCredentials: true) for httponly cookie flows.
   try {
     let token = null;
     try {
       token = localStorage.getItem("accessToken");
     } catch (e) {
-      // localStorage may be unavailable in some environments; fall back to store
       token = null;
     }
 
@@ -34,7 +30,6 @@ apiClient.interceptors.request.use((config) => {
       config.headers.Authorization = `Bearer ${token}`;
     }
   } catch (e) {
-    // don't fail request creation if store/localStorage access fails for any reason
   }
 
   if (config.data instanceof FormData) {

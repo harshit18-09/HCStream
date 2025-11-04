@@ -9,7 +9,7 @@ export { asyncHandler };
 
 
 
-
+//tried something else keeping this for future reference - HC
 // const asyncHandler = (fn) => async (req, res, next) => {
 //     try{
 //         await fn(req, res, next);
