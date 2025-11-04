@@ -4,6 +4,18 @@ import jwt from "jsonwebtoken";
 import { User } from "../models/user.model.js";
 
 export const verifyJWT = asyncHandler(async (req, _, next) => {
+    // Global opt-out: if DISABLE_AUTH=true is set, bypass authentication entirely.
+    // This is intended as an emergency/dev escape hatch. Use with caution.
+    if (String(process.env.DISABLE_AUTH || '').toLowerCase() === 'true') {
+        // try to attach a user for downstream handlers; fall back to null
+        try {
+            const user = await User.findOne().select("-password -refreshToken");
+            if (user) req.user = user;
+        } catch (e) {
+            // ignore db errors and proceed without user
+        }
+        return next();
+    }
     try {
         // Try Authorization header first (Bearer <token>), fall back to cookie for compatibility
         const authHeader = req.header?.("Authorization") || req.headers?.authorization;
