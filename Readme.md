@@ -2,7 +2,6 @@
 
 **HCStream** is a cloud-deployed, full-stack media streaming web app built with **React**, **Node.js**, and **MongoDB**, powered by **Docker** and deployed via **AWS ECS (Fargate)**.  
 It allows users to upload, manage, and stream media files, and integrates a smart AI Caption & Transcript Generator to enhance accessibility and user experience.
-> 💡 *Built as a full-stack + AI + Cloud project showcasing scalable modern web architecture.*
 
 ---
 
@@ -71,14 +70,13 @@ HCStream/
 
 ---
 
-## 🧠 AI Feature (Planned)
+## 🧠 AI Feature 
 
 ### AI Caption & Transcript Generator
-- Uses **speech-to-text models** (OpenAI Whisper / Hugging Face Wav2Vec2).  
+- Uses **speech-to-text models** (OpenAI Whisper).  
 - Generates captions and transcripts automatically for uploaded videos.  
 - Integrated as a backend REST endpoint with a simple frontend button/modal for users.
 
-This addition will make HCStream a complete **Full Stack + AI + Cloud** application.
 
 ---
 
@@ -89,19 +87,7 @@ This addition will make HCStream a complete **Full Stack + AI + Cloud** applicat
 git clone https://github.com/harshit18-09/HCStream.git
 cd HCStream
 ```
-### 2️⃣ Environment Variables
 
-| **Component** | **Variable** | **Description** | **Example / Default** |
-|----------------|--------------|-----------------|------------------------|
-| **Backend** | `PORT` | Port on which the backend server runs | `5000` |
-|  | `MONGO_URI` | MongoDB connection string | `your_mongodb_uri` |
-|  | `JWT_SECRET` | Secret key for JWT authentication | `your_secret` |
-| **Frontend** | `VITE_API_URL` | API base URL for frontend requests | `http://localhost:5000` |
-
-> 💡 Create separate `.env` files in the backend and frontend folders with these variables.  
-> Ensure `.env` is added to `.gitignore` to prevent pushing sensitive information.
-
----
 
 ## ☁️ AWS Deployment
 
@@ -128,7 +114,7 @@ cd HCStream
 | 🌐 **AWS ALB (Load Balancer)** | ![AWS ALB](./docs/screenshots/aws-ec2-alb.png) |
 | ⚡ **GitHub Actions (CI/CD)** | ![GitHub Actions](./docs/screenshots/github-actions.png) |
 | 💸 **AWS SNS Billing Alert** | ![Billing Alert](./docs/screenshots/sns-billing-alert.png) |
-| 🧠 **AI Module** *(coming soon)* | ![AI Module](./docs/screenshots/ai.png) |
+| 🧠 **AI Module** | ![AI Module](./docs/screenshots/ai.png) |
 
 > 🗂️ All screenshots are stored in `/docs/screenshots/` folder.
 
