@@ -19,7 +19,7 @@ It demonstrates how scalable web applications can be built using containerized m
 | **Frontend** | React (Vite), Axios, Tailwind CSS |
 | **Backend** | Node.js, Express.js |
 | **Database** | MongoDB (Mongoose ODM) |
-| **AI Module (upcoming)** | OpenAI Whisper / Hugging Face Transformers |
+| **AI Module** | OpenAI Whisper / Hugging Face Transformers |
 | **Containerization** | Docker |
 | **CI/CD** | GitHub Actions |
 | **Cloud Deployment** | AWS ECS (Fargate), AWS S3, AWS Application Load Balancer (ALB) |
@@ -34,7 +34,7 @@ It demonstrates how scalable web applications can be built using containerized m
 - 📡 **Cloud Deployment** – Backend and frontend deployed via **AWS ECS** and **S3**, connected through an **Application Load Balancer**.  
 - 🐳 **Dockerized Architecture** – Each service containerized for better scalability.  
 - ⚙️ **CI/CD Pipeline** – Automated builds and deployments using **GitHub Actions**.  
-- 🧠 **AI Caption / Transcript Generator** *(upcoming)* – Automatically generate captions and transcripts for uploaded videos.  
+- 🧠 **AI Caption / Transcript Generator** – Automatically generate captions and transcripts for uploaded videos.  
 - 📄 **Well-structured Documentation** – Clean code and organized setup for easy understanding.
 
 ---
