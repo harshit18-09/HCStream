@@ -8,7 +8,7 @@ It allows users to upload, manage, and stream media files, and integrates a smar
 ## 🚀 Overview
 
 HCStream brings together modern full-stack development, AI integration, and cloud deployment in one platform.  
-It demonstrates how scalable web applications can be built using containerized microservices and deployed seamlessly through AWS.
+It demonstrates how scalable web applications can be built using containerized services and deployed seamlessly through AWS.
 
 ---
 
@@ -30,7 +30,7 @@ It demonstrates how scalable web applications can be built using containerized m
 ## 🧩 Core Features
 
 - 🎬 **Media Upload & Playback** – Upload, store, and stream videos from a clean, responsive UI.  
-- 🔐 **Authentication System** – Secure login and registration (JWT planned for production).  
+- 🔐 **Authentication System** – Secure login and registration using JWT.  
 - 📡 **Cloud Deployment** – Backend and frontend deployed via **AWS ECS** and **S3**, connected through an **Application Load Balancer**.  
 - 🐳 **Dockerized Architecture** – Each service containerized for better scalability.  
 - ⚙️ **CI/CD Pipeline** – Automated builds and deployments using **GitHub Actions**.  
@@ -126,7 +126,7 @@ cd HCStream
 - **Cloud-native deployment** leveraging AWS ECS (Fargate) and S3 hosting.  
 - **Automated CI/CD pipeline** with GitHub Actions for seamless updates.  
 - Structured, modular codebase ensuring scalability and maintainability.  
-- Upcoming **AI Caption Generator** module for enhanced accessibility and interactivity.
+- Implemented **AI Caption Generator** module for enhanced accessibility and interactivity.
 
 ---
 
